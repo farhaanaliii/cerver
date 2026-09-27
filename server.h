@@ -27,11 +27,18 @@
 
 #endif
 
+#define STR_IMPL(x) #x
+#define STR(x) STR_IMPL(x)
+
+#define METHOD_LENGTH 19
+#define METHOD_BUFFER_SIZE (METHOD_LENGTH + 1)
+
+#define PATH_LENGTH 99
+#define PATH_BUFFER_SIZE (PATH_LENGTH + 1)
+
 #define BUFFER_SIZE  1024
 #define MAX_ROUTES 20
 #define TIME_BUFFER_SIZE 80
-#define METHOD_BUFFER_SIZE 20
-#define PATH_BUFFER_SIZE 100
 
 typedef struct{
 	int port;

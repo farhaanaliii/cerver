@@ -74,7 +74,12 @@ void handle_client(socket_t client_socket){
 	}
 	
 	char method[METHOD_BUFFER_SIZE] = {0}, path[PATH_BUFFER_SIZE] = {0};
-	sscanf(buffer, "%s %s", method, path);
+	if(sscanf(buffer, "%" STR(METHOD_LENGTH) "s %" STR(PATH_LENGTH) "s", method, path) != 2){
+		handle_route_not_found(client_socket);
+		closesocket(client_socket);
+		return;
+	}
+
 	logger(method, path);
 	
 	if(strcmp(method, "GET") == 0){
