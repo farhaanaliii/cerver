@@ -58,11 +58,7 @@ void start_server(Server *server){
 		client_len = sizeof(client_addr);
 	}
 	
-	if(new_socket == INVALID_SOCKET){
-		perror("accept failed");
-		exit(EXIT_FAILURE);
-	}
-	
+	perror("accept failed");
 }
 
 void handle_client(socket_t client_socket){
