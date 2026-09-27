@@ -8,8 +8,6 @@
 
 Route routes[MAX_ROUTES];
 int route_count = 0;
-time_t raw;
-struct tm * timeinfo;
 
 void init_server(Server *server, int port){
 	if(socketinit() != 0){
@@ -151,10 +149,11 @@ const char* get_mime_type(const char *file_path){
 }
 
 void logger(const char *method, const char *path){
-	char buffer[TIME_BUFFER_SIZE];
+	time_t raw;
 	time(&raw);
-	timeinfo = localtime(&raw);
+	struct tm * timeinfo = localtime(&raw);
 	
+	char buffer[TIME_BUFFER_SIZE];
 	strftime(buffer, TIME_BUFFER_SIZE, "[%a %b %d %H:%M:%S %Y]", timeinfo);
 	printf("%s %s %s\n", buffer, method, path);
 }
