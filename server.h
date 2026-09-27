@@ -48,20 +48,20 @@ typedef struct{
 } Server;
 
 typedef struct{
-	char *route;
-	char *file_path;
+	const char *route;
+	const char *file_path;
 } Route;
 
 
 void init_server(Server *server, int port);
 void start_server(Server *server);
 void handle_client(socket_t client_socket);
-void add_route(char *route, char *file_path);
-void handle_route(socket_t client_socket, char *route);
+void add_route(const char *route, const char *file_path);
+void handle_route(socket_t client_socket, const char *route);
 void handle_route_not_found(socket_t client_socket);
-void serve_file(socket_t client_socket, char *file_path);
-char* get_mime_type(char *file_path);
-void logger(char *method, char *path);
+void serve_file(socket_t client_socket, const char *file_path);
+const char* get_mime_type(const char *file_path);
+void logger(const char *method, const char *path);
 void shutdown_server(Server *server);
 
 #endif

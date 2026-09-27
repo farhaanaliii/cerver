@@ -87,7 +87,7 @@ void handle_client(socket_t client_socket){
 	closesocket(client_socket);
 }
 
-void add_route(char *route, char *file_path){
+void add_route(const char *route, const char *file_path){
 	if(route_count < MAX_ROUTES){
 		routes[route_count].route = route;
 		routes[route_count].file_path = file_path;
@@ -95,7 +95,7 @@ void add_route(char *route, char *file_path){
 	}
 }
 
-void handle_route(socket_t client_socket, char *route){
+void handle_route(socket_t client_socket, const char *route){
 	for(int i=0; i<route_count; i++){
 		if(strcmp(route, routes[i].route) == 0){
 			serve_file(client_socket, routes[i].file_path);
@@ -112,7 +112,7 @@ void handle_route_not_found(socket_t client_socket){
 	send(client_socket, resp, strlen(resp), 0);
 }
 
-void serve_file(socket_t client_socket, char *file_path){
+void serve_file(socket_t client_socket, const char *file_path){
 	int file = open(file_path, O_RDONLY | O_BINARY);
 	
 	if(file < 0){
@@ -137,8 +137,8 @@ void serve_file(socket_t client_socket, char *file_path){
 	close(file);
 }
 
-char* get_mime_type(char *file_path){
-	char *ext = strrchr(file_path, '.');
+const char* get_mime_type(const char *file_path){
+	const char *ext = strrchr(file_path, '.');
 	if(!ext) return "text/plain";
 	if(strcmp(ext, ".html") == 0) return "text/html";
 	if(strcmp(ext, ".css") == 0) return "text/css";
@@ -150,7 +150,7 @@ char* get_mime_type(char *file_path){
 	return "text/plain";
 }
 
-void logger(char *method, char *path){
+void logger(const char *method, const char *path){
 	char buffer[TIME_BUFFER_SIZE];
 	time(&raw);
 	timeinfo = localtime(&raw);
