@@ -1,36 +1,57 @@
+<div align="center">
+
 # Cerver
 
-Cerver is a lightweight and straightforward HTTP server library written in C, designed to be easy to use and integrate into your projects. Created by Farhan Ali ([@farhaanaliii](https://github.com/farhaanaliii)), this library allows you to quickly set up a server, define routes, and serve static files with minimal setup. Whether you're building a small personal project or a larger application, Cerver provides the essential tools needed to handle HTTP requests efficiently.
+A minimal, educational HTTP server written in C.
 
-![GitHub stars](https://img.shields.io/github/stars/farhaanaliii/cerver.svg)
-![GitHub forks](https://img.shields.io/github/forks/farhaanaliii/cerver.svg)
-![GitHub issues](https://img.shields.io/github/issues/farhaanaliii/cerver.svg)
-![GitHub release](https://img.shields.io/github/release/farhaanaliii/cerver.svg)
+[![Stars](https://img.shields.io/github/stars/farhaanaliii/cerver?style=flat-square)](https://github.com/farhaanaliii/cerver/stargazers)
+[![Forks](https://img.shields.io/github/forks/farhaanaliii/cerver?style=flat-square)](https://github.com/farhaanaliii/cerver/network/members)
+[![Issues](https://img.shields.io/github/issues/farhaanaliii/cerver?style=flat-square)](https://github.com/farhaanaliii/cerver/issues)
+[![License](https://img.shields.io/github/license/farhaanaliii/cerver?style=flat-square)](LICENSE)
+
+</div>
+
+Cerver is a minimal, straightforward HTTP server written from scratch in C. Built without external dependencies or complex abstractions, it focuses on simplicity and readability—demonstrating fundamental socket programming, basic routing, and static file delivery across Windows (Winsock2) and POSIX systems. It is single-threaded and synchronous, designed for learning, prototyping, and personal experiments rather than high-concurrency production workloads.
 
 ## Features
 
-- Simple and easy to use
-- Supports adding multiple routes
-- Serves static files
-- Logs HTTP requests
+- Minimal, clean codebase with zero third-party dependencies
+- Cross-platform support for Windows (Winsock2) and POSIX systems
+- Route registration and path matching
+- Static file serving with MIME type detection
+- Automatic port reuse configuration
+- Timestamped request logging
 
 ## Installation
 
-To use `cerver`, clone the repository and include the `server.h` and `server.c` files in your project.
+Clone the repository into your project directory:
 
 ```bash
 git clone https://github.com/farhaanaliii/cerver.git
 ```
 
-## Usage
+Include `server.h` in your code and compile `server.c` alongside your project files.
 
-### Example
+## Building
+
+On Windows (MinGW / GCC):
+
+```bash
+gcc main.c server.c -o cerver.exe -lws2_32
+```
+
+On Linux and macOS:
+
+```bash
+gcc main.c server.c -o cerver
+```
+
+## Usage
 
 ```c
 #include "server.h"
-#include <stdio.h>
 
-int main() {
+int main(void) {
     Server server;
     init_server(&server, 3000);
 
@@ -39,33 +60,37 @@ int main() {
     add_route("/contact", "web/contact.html");
 
     start_server(&server);
+    shutdown_server(&server);
 
     return 0;
 }
 ```
 
-## API
+## API Reference
 
 ### Structs
 
-#### `Server`
+#### Server
+
+Represents the server instance and socket listener state.
 
 ```c
 typedef struct {
     int port;
-    int server_fd;
+    socket_t server_fd;
     int addrlen;
     struct sockaddr_in address;
 } Server;
-
 ```
 
-#### `Route`
+#### Route
+
+Represents an HTTP route mapping a request path to a static file.
 
 ```c
 typedef struct {
-    char *route;
-    char *file_path;
+    const char *route;
+    const char *file_path;
 } Route;
 ```
 
@@ -73,28 +98,34 @@ typedef struct {
 
 #### `void init_server(Server *server, int port);`
 
-Initializes the server with the specified port.
+Initializes platform socket libraries, sets socket options, binds to the specified port, and configures the server instance.
 
-- `server`: A pointer to the `Server` structure.
-- `port`: The port number to listen on.
+- `server`: Pointer to the `Server` structure.
+- `port`: Port number to listen on.
 
-#### `void add_route(char *route, char *file_path);`
+#### `void add_route(const char *route, const char *file_path);`
 
-Adds a new route to the server.
+Registers an HTTP route path and its associated file to serve.
 
-- `route`: The URL path for the route.
-- `file_path`: The file path to serve when the route is accessed.
+- `route`: URL path for the route.
+- `file_path`: Path to the file to serve.
 
 #### `void start_server(Server *server);`
 
-Starts the server and listens for incoming connections.
+Starts listening on the configured port and accepts incoming connections.
 
-- `server`: A pointer to the `Server` structure.
+- `server`: Pointer to the `Server` structure.
+
+#### `void shutdown_server(Server *server);`
+
+Closes the active listening socket and executes platform socket cleanup.
+
+- `server`: Pointer to the `Server` structure.
 
 ## Contributing
 
-Feel free to submit issues and pull requests! Contributions are welcome.
+Contributions are welcome. Feel free to open an issue or submit a pull request.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
