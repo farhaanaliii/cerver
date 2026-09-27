@@ -50,8 +50,12 @@ void start_server(Server *server){
 	printf("Server is listening on Port %d\n", server->port);
 	
 	socket_t new_socket;
-	while((new_socket = accept(server->server_fd, (struct sockaddr*)&server->address, (socklen_t*)&server->addrlen)) != INVALID_SOCKET){
+	struct sockaddr_in client_addr;
+	socklen_t client_len = sizeof(client_addr);
+
+	while((new_socket = accept(server->server_fd, (struct sockaddr*)&client_addr, &client_len)) != INVALID_SOCKET){
 		handle_client(new_socket);
+		client_len = sizeof(client_addr);
 	}
 	
 	if(new_socket == INVALID_SOCKET){
