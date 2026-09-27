@@ -1,0 +1,7 @@
+CompileFlags:
+  Add:
+    - "-xc"
+    - "-std=gnu11"
+    - "-Wall"
+    - "-Wextra"
+    - "-I."

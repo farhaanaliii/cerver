@@ -1,7 +1,31 @@
 #ifndef SERVER_H
 #define SERVER_H
 
-#include <netinet/in.h>
+#ifdef _WIN32
+	#include <winsock2.h>
+	#include <ws2tcpip.h>
+
+	typedef SOCKET socket_t;
+	static inline int socketinit(void) {
+		WSADATA wsa;
+		return WSAStartup(MAKEWORD(2, 2), &wsa);
+	}
+	#define socketcleanup() WSACleanup()
+
+#else
+	#include <netinet/in.h>
+	#include <sys/socket.h>
+	#include <arpa/inet.h>
+	#include <unistd.h>
+
+	typedef int socket_t;	
+	#define INVALID_SOCKET (-1)
+	#define socketinit() 0
+	#define socketcleanup() ((void)0)
+	#define closesocket close
+	#define O_BINARY 0
+
+#endif
 
 #define BUFFER_SIZE  1024
 #define MAX_ROUTES 20
@@ -11,7 +35,7 @@
 
 typedef struct{
 	int port;
-	int server_fd;
+	socket_t server_fd;
 	int addrlen;
 	struct sockaddr_in address;
 } Server;
@@ -24,12 +48,13 @@ typedef struct{
 
 void init_server(Server *server, int port);
 void start_server(Server *server);
-void handle_client(int client_socket);
+void handle_client(socket_t client_socket);
 void add_route(char *route, char *file_path);
-void handle_route(int client_socket, char *route);
-void handle_route_not_found(int client_socket);
-void serve_file(int client_socket, char *file_path);
+void handle_route(socket_t client_socket, char *route);
+void handle_route_not_found(socket_t client_socket);
+void serve_file(socket_t client_socket, char *file_path);
 char* get_mime_type(char *file_path);
 void logger(char *method, char *path);
+void shutdown_server(Server *server);
 
 #endif

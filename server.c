@@ -1,8 +1,6 @@
 #include "server.h"
+#include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -14,10 +12,14 @@ time_t raw;
 struct tm * timeinfo;
 
 void init_server(Server *server, int port){
+	if(socketinit() != 0){
+		perror("Socket initialization failed");
+		exit(1);
+	}
 	server->port = port;
 	server->addrlen = sizeof(server->address);
 	
-	if((server->server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0){
+	if((server->server_fd = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET){
 		perror("socket failed");
 		exit(EXIT_FAILURE);
 	}
@@ -40,22 +42,22 @@ void start_server(Server *server){
 	
 	printf("Server is listening on Port %d\n", server->port);
 	
-	int new_socket;
-	while((new_socket = accept(server->server_fd, (struct sockaddr*)&server->address, (socklen_t*)&server->addrlen)) >= 0){
+	socket_t new_socket;
+	while((new_socket = accept(server->server_fd, (struct sockaddr*)&server->address, (socklen_t*)&server->addrlen)) != INVALID_SOCKET){
 		handle_client(new_socket);
 	}
 	
-	if(new_socket < 0){
+	if(new_socket == INVALID_SOCKET){
 		perror("accept failed");
 		exit(EXIT_FAILURE);
 	}
 	
 }
 
-void handle_client(int client_socket){
+void handle_client(socket_t client_socket){
 	char buffer[BUFFER_SIZE] = {0};
-	int valread = recv(client_socket, buffer, BUFFER_SIZE - 1, MSG_PEEK);
-	if(client_socket < 0){
+	int valread = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
+	if(valread < 0){
 		perror("recv failed");
 		exit(EXIT_FAILURE);
 	}
@@ -70,7 +72,7 @@ void handle_client(int client_socket){
 		handle_route_not_found(client_socket);
 	}
 	
-	close(client_socket);
+	closesocket(client_socket);
 }
 
 void add_route(char *route, char *file_path){
@@ -81,7 +83,7 @@ void add_route(char *route, char *file_path){
 	}
 }
 
-void handle_route(int client_socket, char *route){
+void handle_route(socket_t client_socket, char *route){
 	for(int i=0; i<route_count; i++){
 		if(strcmp(route, routes[i].route) == 0){
 			serve_file(client_socket, routes[i].file_path);
@@ -91,15 +93,15 @@ void handle_route(int client_socket, char *route){
 	handle_route_not_found(client_socket);
 }
 
-void handle_route_not_found(int client_socket){
+void handle_route_not_found(socket_t client_socket){
 	char *resp = "HTTP/1.1 404 Not Found\r\n"
 				  "Content-Length: 13\r\n\r\n"
 				  "404 Not Found";
 	send(client_socket, resp, strlen(resp), 0);
 }
 
-void serve_file(int client_socket, char *file_path){
-	int file = open(file_path, O_RDONLY);
+void serve_file(socket_t client_socket, char *file_path){
+	int file = open(file_path, O_RDONLY | O_BINARY);
 	
 	if(file < 0){
 		handle_route_not_found(client_socket);
@@ -110,7 +112,7 @@ void serve_file(int client_socket, char *file_path){
 	fstat(file, &file_stat);
 	
 	char response_header[BUFFER_SIZE];
-	snprintf(response_header, BUFFER_SIZE, "HTTP/1.1 200 OK\r\nContent-Length: %lld\r\nContent-Type: %s\r\n\r\n", file_stat.st_size, get_mime_type(file_path));
+	snprintf(response_header, BUFFER_SIZE, "HTTP/1.1 200 OK\r\nContent-Length: %ld\r\nContent-Type: %s\r\n\r\n", file_stat.st_size, get_mime_type(file_path));
 	send(client_socket, response_header, strlen(response_header), 0);
 	
 	char file_buffer[BUFFER_SIZE];
@@ -143,4 +145,10 @@ void logger(char *method, char *path){
 	
 	strftime(buffer, TIME_BUFFER_SIZE, "[%a %b %d %H:%M:%S %Y]", timeinfo);
 	printf("%s %s %s\n", buffer, method, path);
+}
+
+void shutdown_server(Server *server){
+	closesocket(server->server_fd);
+	server->server_fd = INVALID_SOCKET;
+	socketcleanup();
 }
