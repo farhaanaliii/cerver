@@ -16,11 +16,18 @@ void init_server(Server *server, int port){
 		perror("Socket initialization failed");
 		exit(1);
 	}
+
 	server->port = port;
 	server->addrlen = sizeof(server->address);
 	
 	if((server->server_fd = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET){
 		perror("socket failed");
+		exit(EXIT_FAILURE);
+	}
+
+	int opt = 1;
+	if(setsockopt(server->server_fd, SOL_SOCKET, SO_REUSEADDR, (const char *)&opt, sizeof(opt)) < 0){
+		perror("setsockopt failed");
 		exit(EXIT_FAILURE);
 	}
 	
