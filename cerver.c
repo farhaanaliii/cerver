@@ -132,7 +132,7 @@ void cerver_serve_file(socket_t client_socket, const char *file_path){
 	fstat(file, &file_stat);
 	
 	char response_header[BUFFER_SIZE];
-	snprintf(response_header, BUFFER_SIZE, "HTTP/1.1 200 OK\r\nContent-Length: %ld\r\nContent-Type: %s\r\n\r\n", file_stat.st_size, cerver_get_mime_type(file_path));
+	snprintf(response_header, BUFFER_SIZE, "HTTP/1.1 200 OK\r\nContent-Length: %lld\r\nContent-Type: %s\r\n\r\n", (long long)file_stat.st_size, cerver_get_mime_type(file_path));
 	send(client_socket, response_header, strlen(response_header), 0);
 	
 	char file_buffer[BUFFER_SIZE];
