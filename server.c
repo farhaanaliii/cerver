@@ -63,7 +63,8 @@ void handle_client(Server *server, socket_t client_socket){
 	int valread = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
 	if(valread < 0){
 		perror("recv failed");
-		exit(EXIT_FAILURE);
+		closesocket(client_socket);
+		return;
 	}
 	
 	char method[METHOD_BUFFER_SIZE] = {0}, path[PATH_BUFFER_SIZE] = {0};
