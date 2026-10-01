@@ -7,7 +7,7 @@
 #include <time.h>
 
 
-void cerver_init(Cerver *server, int port){
+void cerver_init(Cerver *server, uint16_t port){
 	if(socketinit() != 0){
 		perror("Socket initialization failed");
 		exit(1);
@@ -94,7 +94,7 @@ void cerver_add_route(Cerver *server, const char *route, const char *file_path){
 }
 
 void cerver_handle_route(Cerver *server, socket_t client_socket, const char *route){
-	for(int i=0; i<server->route_count; i++){
+	for(size_t i=0; i<server->route_count; i++){
 		if(strcmp(route, server->routes[i].route) == 0){
 			cerver_serve_file(client_socket, server->routes[i].file_path);
 			return;

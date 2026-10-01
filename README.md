@@ -86,18 +86,18 @@ Represents the server instance, socket listener state, and route table.
 
 ```c
 typedef struct {
-    int port;
+    uint16_t port;
     socket_t server_fd;
-    int addrlen;
+    socklen_t addrlen;
     struct sockaddr_in address;
     CerverRoute routes[MAX_ROUTES];
-    int route_count;
+    size_t route_count;
 } Cerver;
 ```
 
 ### Functions
 
-#### `void cerver_init(Cerver *server, int port);`
+#### `void cerver_init(Cerver *server, uint16_t port);`
 
 Initializes platform socket libraries, sets socket options, binds to the specified port, and configures the server instance.
 

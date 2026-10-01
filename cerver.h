@@ -1,6 +1,9 @@
 #ifndef CERVER_H
 #define CERVER_H
 
+#include <stddef.h>
+#include <stdint.h>
+
 #ifdef _WIN32
 	#include <winsock2.h>
 	#include <ws2tcpip.h>
@@ -47,16 +50,16 @@ typedef struct {
 } CerverRoute;
 
 typedef struct {
-	int port;
+	uint16_t port;
 	socket_t server_fd;
-	int addrlen;
+	socklen_t addrlen;
 	struct sockaddr_in address;
 	CerverRoute routes[MAX_ROUTES];
-	int route_count;
+	size_t route_count;
 } Cerver;
 
 
-void cerver_init(Cerver *server, int port);
+void cerver_init(Cerver *server, uint16_t port);
 void cerver_start(Cerver *server);
 void cerver_handle_client(Cerver *server, socket_t client_socket);
 void cerver_add_route(Cerver *server, const char *route, const char *file_path);
