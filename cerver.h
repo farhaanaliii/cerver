@@ -6,7 +6,7 @@
 	#include <ws2tcpip.h>
 
 	typedef SOCKET socket_t;
-	static inline int socketinit(void) {
+	[[maybe_unused]] static inline int socketinit(void) {
 		WSADATA wsa;
 		return WSAStartup(MAKEWORD(2, 2), &wsa);
 	}
