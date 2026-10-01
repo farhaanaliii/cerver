@@ -1,4 +1,4 @@
-#include "server.h"
+#include "cerver.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -7,7 +7,7 @@
 #include <time.h>
 
 
-void init_server(Server *server, int port){
+void cerver_init(Cerver *server, int port){
 	if(socketinit() != 0){
 		perror("Socket initialization failed");
 		exit(1);
@@ -38,7 +38,7 @@ void init_server(Server *server, int port){
 	}
 }
 
-void start_server(Server *server){
+void cerver_start(Cerver *server){
 	if(listen(server->server_fd, 5) < 0){
 		perror("listening failed");
 		exit(EXIT_FAILURE);
@@ -51,14 +51,14 @@ void start_server(Server *server){
 	socklen_t client_len = sizeof(client_addr);
 
 	while((new_socket = accept(server->server_fd, (struct sockaddr*)&client_addr, &client_len)) != INVALID_SOCKET){
-		handle_client(server, new_socket);
+		cerver_handle_client(server, new_socket);
 		client_len = sizeof(client_addr);
 	}
 	
 	perror("accept failed");
 }
 
-void handle_client(Server *server, socket_t client_socket){
+void cerver_handle_client(Cerver *server, socket_t client_socket){
 	char buffer[BUFFER_SIZE] = {0};
 	int valread = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
 	if(valread < 0){
@@ -69,23 +69,23 @@ void handle_client(Server *server, socket_t client_socket){
 	
 	char method[METHOD_BUFFER_SIZE] = {0}, path[PATH_BUFFER_SIZE] = {0};
 	if(sscanf(buffer, "%" STR(METHOD_LENGTH) "s %" STR(PATH_LENGTH) "s", method, path) != 2){
-		handle_route_not_found(client_socket);
+		cerver_handle_route_not_found(client_socket);
 		closesocket(client_socket);
 		return;
 	}
 
-	logger(method, path);
+	cerver_logger(method, path);
 	
 	if(strcmp(method, "GET") == 0){
-		handle_route(server, client_socket, path);
+		cerver_handle_route(server, client_socket, path);
 	}else{
-		handle_route_not_found(client_socket);
+		cerver_handle_route_not_found(client_socket);
 	}
 	
 	closesocket(client_socket);
 }
 
-void add_route(Server *server, const char *route, const char *file_path){
+void cerver_add_route(Cerver *server, const char *route, const char *file_path){
 	if(server->route_count < MAX_ROUTES){
 		server->routes[server->route_count].route = route;
 		server->routes[server->route_count].file_path = file_path;
@@ -93,28 +93,28 @@ void add_route(Server *server, const char *route, const char *file_path){
 	}
 }
 
-void handle_route(Server *server, socket_t client_socket, const char *route){
+void cerver_handle_route(Cerver *server, socket_t client_socket, const char *route){
 	for(int i=0; i<server->route_count; i++){
 		if(strcmp(route, server->routes[i].route) == 0){
-			serve_file(client_socket, server->routes[i].file_path);
+			cerver_serve_file(client_socket, server->routes[i].file_path);
 			return;
 		}
 	}
-	handle_route_not_found(client_socket);
+	cerver_handle_route_not_found(client_socket);
 }
 
-void handle_route_not_found(socket_t client_socket){
+void cerver_handle_route_not_found(socket_t client_socket){
 	char *resp = "HTTP/1.1 404 Not Found\r\n"
 				  "Content-Length: 13\r\n\r\n"
 				  "404 Not Found";
 	send(client_socket, resp, strlen(resp), 0);
 }
 
-void serve_file(socket_t client_socket, const char *file_path){
+void cerver_serve_file(socket_t client_socket, const char *file_path){
 	int file = open(file_path, O_RDONLY | O_BINARY);
 	
 	if(file < 0){
-		handle_route_not_found(client_socket);
+		cerver_handle_route_not_found(client_socket);
 		return;
 	}
 	
@@ -122,7 +122,7 @@ void serve_file(socket_t client_socket, const char *file_path){
 	fstat(file, &file_stat);
 	
 	char response_header[BUFFER_SIZE];
-	snprintf(response_header, BUFFER_SIZE, "HTTP/1.1 200 OK\r\nContent-Length: %ld\r\nContent-Type: %s\r\n\r\n", file_stat.st_size, get_mime_type(file_path));
+	snprintf(response_header, BUFFER_SIZE, "HTTP/1.1 200 OK\r\nContent-Length: %ld\r\nContent-Type: %s\r\n\r\n", file_stat.st_size, cerver_get_mime_type(file_path));
 	send(client_socket, response_header, strlen(response_header), 0);
 	
 	char file_buffer[BUFFER_SIZE];
@@ -135,7 +135,7 @@ void serve_file(socket_t client_socket, const char *file_path){
 	close(file);
 }
 
-const char* get_mime_type(const char *file_path){
+const char* cerver_get_mime_type(const char *file_path){
 	const char *ext = strrchr(file_path, '.');
 	if(!ext) return "text/plain";
 	if(strcmp(ext, ".html") == 0) return "text/html";
@@ -148,7 +148,7 @@ const char* get_mime_type(const char *file_path){
 	return "text/plain";
 }
 
-void logger(const char *method, const char *path){
+void cerver_logger(const char *method, const char *path){
 	time_t raw;
 	time(&raw);
 	struct tm * timeinfo = localtime(&raw);
@@ -158,7 +158,7 @@ void logger(const char *method, const char *path){
 	printf("%s %s %s\n", buffer, method, path);
 }
 
-void shutdown_server(Server *server){
+void cerver_shutdown(Cerver *server){
 	closesocket(server->server_fd);
 	server->server_fd = INVALID_SOCKET;
 	socketcleanup();

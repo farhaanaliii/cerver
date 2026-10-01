@@ -1,5 +1,5 @@
-#ifndef SERVER_H
-#define SERVER_H
+#ifndef CERVER_H
+#define CERVER_H
 
 #ifdef _WIN32
 	#include <winsock2.h>
@@ -41,30 +41,30 @@
 #define TIME_BUFFER_SIZE 80
 
 
-typedef struct{
+typedef struct {
 	const char *route;
 	const char *file_path;
-} Route;
+} CerverRoute;
 
-typedef struct{
+typedef struct {
 	int port;
 	socket_t server_fd;
 	int addrlen;
 	struct sockaddr_in address;
-	Route routes[MAX_ROUTES];
+	CerverRoute routes[MAX_ROUTES];
 	int route_count;
-} Server;
+} Cerver;
 
 
-void init_server(Server *server, int port);
-void start_server(Server *server);
-void handle_client(Server *server, socket_t client_socket);
-void add_route(Server *server, const char *route, const char *file_path);
-void handle_route(Server *server, socket_t client_socket, const char *route);
-void handle_route_not_found(socket_t client_socket);
-void serve_file(socket_t client_socket, const char *file_path);
-const char* get_mime_type(const char *file_path);
-void logger(const char *method, const char *path);
-void shutdown_server(Server *server);
+void cerver_init(Cerver *server, int port);
+void cerver_start(Cerver *server);
+void cerver_handle_client(Cerver *server, socket_t client_socket);
+void cerver_add_route(Cerver *server, const char *route, const char *file_path);
+void cerver_handle_route(Cerver *server, socket_t client_socket, const char *route);
+void cerver_handle_route_not_found(socket_t client_socket);
+void cerver_serve_file(socket_t client_socket, const char *file_path);
+const char* cerver_get_mime_type(const char *file_path);
+void cerver_logger(const char *method, const char *path);
+void cerver_shutdown(Cerver *server);
 
 #endif

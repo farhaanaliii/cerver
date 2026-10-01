@@ -30,36 +30,36 @@ Clone the repository into your project directory:
 git clone https://github.com/farhaanaliii/cerver.git
 ```
 
-Include `server.h` in your code and compile `server.c` alongside your project files.
+Include `cerver.h` in your code and compile `cerver.c` alongside your project files.
 
 ## Building
 
 On Windows (MinGW / GCC):
 
 ```bash
-gcc main.c server.c -o cerver.exe -lws2_32
+gcc main.c cerver.c -o cerver.exe -lws2_32
 ```
 
 On Linux and macOS:
 
 ```bash
-gcc main.c server.c -o cerver
+gcc main.c cerver.c -o cerver
 ```
 
 ## Usage
 
 ```c
-#include "server.h"
+#include "cerver.h"
 
 int main(void) {
-    Server server;
-    init_server(&server, 3000);
+    Cerver server;
+    cerver_init(&server, 3000);
 
-    add_route(&server, "/", "web/index.html");
-    add_route(&server, "/about", "web/about.html");
-    add_route(&server, "/contact", "web/contact.html");
-    start_server(&server);
-    shutdown_server(&server);
+    cerver_add_route(&server, "/", "web/index.html");
+    cerver_add_route(&server, "/about", "web/about.html");
+    cerver_add_route(&server, "/contact", "web/contact.html");
+    cerver_start(&server);
+    cerver_shutdown(&server);
 
     return 0;
 }
@@ -69,7 +69,7 @@ int main(void) {
 
 ### Structs
 
-#### Route
+#### CerverRoute
 
 Represents an HTTP route mapping a request path to a static file.
 
@@ -77,10 +77,10 @@ Represents an HTTP route mapping a request path to a static file.
 typedef struct {
     const char *route;
     const char *file_path;
-} Route;
+} CerverRoute;
 ```
 
-#### Server
+#### Cerver
 
 Represents the server instance, socket listener state, and route table.
 
@@ -90,39 +90,39 @@ typedef struct {
     socket_t server_fd;
     int addrlen;
     struct sockaddr_in address;
-    Route routes[MAX_ROUTES];
+    CerverRoute routes[MAX_ROUTES];
     int route_count;
-} Server;
+} Cerver;
 ```
 
 ### Functions
 
-#### `void init_server(Server *server, int port);`
+#### `void cerver_init(Cerver *server, int port);`
 
 Initializes platform socket libraries, sets socket options, binds to the specified port, and configures the server instance.
 
-- `server`: Pointer to the `Server` structure.
+- `server`: Pointer to the `Cerver` structure.
 - `port`: Port number to listen on.
 
-#### `void add_route(Server *server, const char *route, const char *file_path);`
+#### `void cerver_add_route(Cerver *server, const char *route, const char *file_path);`
 
 Registers an HTTP route path and its associated file to serve on the server instance.
 
-- `server`: Pointer to the `Server` structure.
+- `server`: Pointer to the `Cerver` structure.
 - `route`: URL path for the route.
 - `file_path`: Path to the file to serve.
 
-#### `void start_server(Server *server);`
+#### `void cerver_start(Cerver *server);`
 
 Starts listening on the configured port and accepts incoming connections.
 
-- `server`: Pointer to the `Server` structure.
+- `server`: Pointer to the `Cerver` structure.
 
-#### `void shutdown_server(Server *server);`
+#### `void cerver_shutdown(Cerver *server);`
 
 Closes the active listening socket and executes platform socket cleanup.
 
-- `server`: Pointer to the `Server` structure.
+- `server`: Pointer to the `Cerver` structure.
 
 ## Contributing
 
