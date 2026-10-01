@@ -3,6 +3,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 #ifdef _WIN32
 	#include <winsock2.h>
@@ -59,10 +60,10 @@ typedef struct {
 } Cerver;
 
 
-void cerver_init(Cerver *server, uint16_t port);
-void cerver_start(Cerver *server);
+bool cerver_init(Cerver *server, uint16_t port);
+bool cerver_start(Cerver *server);
 void cerver_handle_client(Cerver *server, socket_t client_socket);
-void cerver_add_route(Cerver *server, const char *route, const char *file_path);
+bool cerver_add_route(Cerver *server, const char *route, const char *file_path);
 void cerver_handle_route(Cerver *server, socket_t client_socket, const char *route);
 void cerver_handle_route_not_found(socket_t client_socket);
 void cerver_serve_file(socket_t client_socket, const char *file_path);

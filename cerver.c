@@ -7,10 +7,10 @@
 #include <time.h>
 
 
-void cerver_init(Cerver *server, uint16_t port){
+bool cerver_init(Cerver *server, uint16_t port){
 	if(socketinit() != 0){
 		perror("Socket initialization failed");
-		exit(1);
+		return false;
 	}
 
 	server->route_count = 0;
@@ -19,13 +19,15 @@ void cerver_init(Cerver *server, uint16_t port){
 	
 	if((server->server_fd = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET){
 		perror("socket failed");
-		exit(EXIT_FAILURE);
+		socketcleanup();
+		return false;
 	}
 
 	int opt = 1;
 	if(setsockopt(server->server_fd, SOL_SOCKET, SO_REUSEADDR, (const char *)&opt, sizeof(opt)) < 0){
 		perror("setsockopt failed");
-		exit(EXIT_FAILURE);
+		cerver_shutdown(server);
+		return false;
 	}
 	
 	server->address.sin_family = AF_INET;
@@ -34,17 +36,21 @@ void cerver_init(Cerver *server, uint16_t port){
 	
 	if(bind(server->server_fd, (struct sockaddr*)&server->address, server->addrlen) < 0){
 		perror("binding failed");
-		exit(EXIT_FAILURE);
+		cerver_shutdown(server);
+		return false;
 	}
+
+	return true;
 }
 
-void cerver_start(Cerver *server){
+bool cerver_start(Cerver *server){
 	if(listen(server->server_fd, 5) < 0){
 		perror("listening failed");
-		exit(EXIT_FAILURE);
+		cerver_shutdown(server);
+		return false;
 	}
 	
-	printf("Server is listening on Port %d\n", server->port);
+	printf("Server is listening on Port %u\n", server->port);
 	
 	socket_t new_socket;
 	struct sockaddr_in client_addr;
@@ -56,6 +62,8 @@ void cerver_start(Cerver *server){
 	}
 	
 	perror("accept failed");
+	cerver_shutdown(server);
+	return false;
 }
 
 void cerver_handle_client(Cerver *server, socket_t client_socket){
@@ -85,12 +93,14 @@ void cerver_handle_client(Cerver *server, socket_t client_socket){
 	closesocket(client_socket);
 }
 
-void cerver_add_route(Cerver *server, const char *route, const char *file_path){
-	if(server->route_count < MAX_ROUTES){
-		server->routes[server->route_count].route = route;
-		server->routes[server->route_count].file_path = file_path;
-		server->route_count++;
+bool cerver_add_route(Cerver *server, const char *route, const char *file_path){
+	if(server->route_count >= MAX_ROUTES){
+		return false;
 	}
+	server->routes[server->route_count].route = route;
+	server->routes[server->route_count].file_path = file_path;
+	server->route_count++;
+	return true;
 }
 
 void cerver_handle_route(Cerver *server, socket_t client_socket, const char *route){
@@ -159,7 +169,9 @@ void cerver_logger(const char *method, const char *path){
 }
 
 void cerver_shutdown(Cerver *server){
-	closesocket(server->server_fd);
-	server->server_fd = INVALID_SOCKET;
+	if(server->server_fd != INVALID_SOCKET){
+		closesocket(server->server_fd);
+		server->server_fd = INVALID_SOCKET;
+	}
 	socketcleanup();
 }
