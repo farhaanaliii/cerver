@@ -40,24 +40,27 @@
 #define MAX_ROUTES 20
 #define TIME_BUFFER_SIZE 80
 
-typedef struct{
-	int port;
-	socket_t server_fd;
-	int addrlen;
-	struct sockaddr_in address;
-} Server;
 
 typedef struct{
 	const char *route;
 	const char *file_path;
 } Route;
 
+typedef struct{
+	int port;
+	socket_t server_fd;
+	int addrlen;
+	struct sockaddr_in address;
+	Route routes[MAX_ROUTES];
+	int route_count;
+} Server;
+
 
 void init_server(Server *server, int port);
 void start_server(Server *server);
-void handle_client(socket_t client_socket);
-void add_route(const char *route, const char *file_path);
-void handle_route(socket_t client_socket, const char *route);
+void handle_client(Server *server, socket_t client_socket);
+void add_route(Server *server, const char *route, const char *file_path);
+void handle_route(Server *server, socket_t client_socket, const char *route);
 void handle_route_not_found(socket_t client_socket);
 void serve_file(socket_t client_socket, const char *file_path);
 const char* get_mime_type(const char *file_path);

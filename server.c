@@ -6,8 +6,6 @@
 #include <fcntl.h>
 #include <time.h>
 
-Route routes[MAX_ROUTES];
-int route_count = 0;
 
 void init_server(Server *server, int port){
 	if(socketinit() != 0){
@@ -15,6 +13,7 @@ void init_server(Server *server, int port){
 		exit(1);
 	}
 
+	server->route_count = 0;
 	server->port = port;
 	server->addrlen = sizeof(server->address);
 	
@@ -52,14 +51,14 @@ void start_server(Server *server){
 	socklen_t client_len = sizeof(client_addr);
 
 	while((new_socket = accept(server->server_fd, (struct sockaddr*)&client_addr, &client_len)) != INVALID_SOCKET){
-		handle_client(new_socket);
+		handle_client(server, new_socket);
 		client_len = sizeof(client_addr);
 	}
 	
 	perror("accept failed");
 }
 
-void handle_client(socket_t client_socket){
+void handle_client(Server *server, socket_t client_socket){
 	char buffer[BUFFER_SIZE] = {0};
 	int valread = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
 	if(valread < 0){
@@ -77,7 +76,7 @@ void handle_client(socket_t client_socket){
 	logger(method, path);
 	
 	if(strcmp(method, "GET") == 0){
-		handle_route(client_socket, path);
+		handle_route(server, client_socket, path);
 	}else{
 		handle_route_not_found(client_socket);
 	}
@@ -85,18 +84,18 @@ void handle_client(socket_t client_socket){
 	closesocket(client_socket);
 }
 
-void add_route(const char *route, const char *file_path){
-	if(route_count < MAX_ROUTES){
-		routes[route_count].route = route;
-		routes[route_count].file_path = file_path;
-		route_count++;
+void add_route(Server *server, const char *route, const char *file_path){
+	if(server->route_count < MAX_ROUTES){
+		server->routes[server->route_count].route = route;
+		server->routes[server->route_count].file_path = file_path;
+		server->route_count++;
 	}
 }
 
-void handle_route(socket_t client_socket, const char *route){
-	for(int i=0; i<route_count; i++){
-		if(strcmp(route, routes[i].route) == 0){
-			serve_file(client_socket, routes[i].file_path);
+void handle_route(Server *server, socket_t client_socket, const char *route){
+	for(int i=0; i<server->route_count; i++){
+		if(strcmp(route, server->routes[i].route) == 0){
+			serve_file(client_socket, server->routes[i].file_path);
 			return;
 		}
 	}
